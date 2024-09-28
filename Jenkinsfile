@@ -5,13 +5,9 @@ pipeline {
     }
 
     stages {
-        stages {
-            stage('Test Docker Access') {
-                steps {
-                    script {
-                        sh '/usr/bin/docker --version' 
-                    }
-                }
+        stage('Test') {
+            steps {
+                sh 'docker ps -a'
             }
         }
 
@@ -20,6 +16,7 @@ pipeline {
                 docker { image 'maven:3.6.3-openjdk-11-slim' }
             }
             steps {
+                sh 'ls -l target/'
                 sh 'mvn clean install'
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
@@ -71,7 +68,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
-                    sh 'docker rm msmicroservice -f || true' // Agrega || true para evitar errores si no existe
+                    sh 'docker rm msmicroservice -f || true'
                     sh 'docker run -d -p 8080:8080 --name msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
                     sh 'docker logout'
                 }
