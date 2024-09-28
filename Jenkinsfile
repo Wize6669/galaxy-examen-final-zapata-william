@@ -5,14 +5,6 @@ pipeline {
     }
 
     stages {
-        stage('Test') {
-            steps {
-                sh 'echo Hola DevOps Enginers...'
-                sh 'echo Hola DevOps Enginers...'
-                sh 'docker ps -a'
-            }
-        }
-
         stage('Build') {
             agent {
                 docker { image 'maven:3.6.3-openjdk-11-slim' }
