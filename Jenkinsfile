@@ -7,6 +7,8 @@ pipeline {
     stages {
         stage('Test') {
             steps {
+                sh 'echo Hola DevOps Enginers...'
+                sh 'echo Hola DevOps Enginers...'
                 sh 'docker ps -a'
             }
         }
