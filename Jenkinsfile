@@ -32,6 +32,9 @@ pipeline {
         }
 
         stage('Build Image') {
+            agent {
+                docker { image 'docker:latest' } // Cambia aquí a una imagen que tenga Docker
+            }
             steps {
                 copyArtifacts filter: 'target/*.jar',
                             fingerprintArtifacts: true,
@@ -46,25 +49,25 @@ pipeline {
         }
 
         stage('Publish Image') {
-                steps {
-                    script {
-                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
-                        sh 'docker tag msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
-                        sh 'docker push ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
-                        sh 'docker logout'
-                    }
+            steps {
+                script {
+                    sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                    sh 'docker tag msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                    sh 'docker push ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                    sh 'docker logout'
                 }
             }
+        }
 
         stage('Run Container') {
-                steps {
-                    script {
-                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
-                        sh 'docker rm msmicroservice -f'
-                        sh 'docker run -d -p 8080:8080 --name msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
-                        sh 'docker logout'
-                    }
+            steps {
+                script {
+                    sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                    sh 'docker rm msmicroservice -f || true' // Agrega || true para evitar errores si no existe
+                    sh 'docker run -d -p 8080:8080 --name msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                    sh 'docker logout'
                 }
             }
+        }
     }
 }
