@@ -7,13 +7,11 @@ pipeline {
     stages {
         stage('Build') {
             agent {
-                docker {
-                    image 'maven:3.6.3-openjdk-11-slim'
-                    label 'docker-agent' 
-                }
+                docker { image 'maven:3.6.3-openjdk-11-slim' }
             }
             steps {
                 sh 'mvn clean install'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
 
@@ -33,35 +31,40 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
-                script {
-                    sh 'docker --version'
-                    sh 'docker build -t msmicroservice:latest .'
-                }
+                copyArtifacts filter: 'target/*.jar',
+                            fingerprintArtifacts: true,
+                            projectName: '${JOB_NAME}',
+                            flatten: true,
+                            selector: specific('${BUILD_NUMBER}'),
+                            target: 'target/'
+                sh 'docker --version'
+                sh 'docker-compose --version'
+                sh 'docker-compose build'
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
-                    sh 'docker tag msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:latest'
-                    sh 'docker push ${DOCKER_CREDS_USR}/msmicroservice:latest'
-                    sh 'docker logout'
+        stage('Publish Image') {
+                steps {
+                    script {
+                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                        sh 'docker tag msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        sh 'docker push ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        sh 'docker logout'
+                    }
                 }
             }
-        }
 
         stage('Run Container') {
-            steps {
-                script {
-                    sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
-                    sh 'docker rm msmicroservice -f'
-                    sh 'docker run -d -p 8080:8080 --name msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
-                    sh 'docker logout'
+                steps {
+                    script {
+                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                        sh 'docker rm msmicroservice -f'
+                        sh 'docker run -d -p 8080:8080 --name msmicroservice ${DOCKER_CREDS_USR}/msmicroservice:$BUILD_NUMBER'
+                        sh 'docker logout'
+                    }
                 }
             }
-        }
     }
 }
