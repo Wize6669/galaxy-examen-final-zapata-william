@@ -23,8 +23,8 @@ pipeline {
                     def scannerHome = tool 'scanner-default'
                     withSonarQubeEnv('sonar-server') {
                         sh "${scannerHome}/bin/sonar-scanner " +
-                           "-Dsonar.projectKey=labgradle01 " +
-                           "-Dsonar.projectName=labgradle01 " +
+                           "-Dsonar.projectKey=msmicroservice " +
+                           "-Dsonar.projectName=msmicroservice " +
                            "-Dsonar.sources=src/main/kotlin " +
                            "-Dsonar.java.binaries=build/classes " +
                            "-Dsonar.tests=src/test/kotlin"
@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     sh 'docker --version'
-                    sh 'docker build -t labgradle01:latest .'
+                    sh 'docker build -t msmicroservice:latest .'
                 }
             }
         }
