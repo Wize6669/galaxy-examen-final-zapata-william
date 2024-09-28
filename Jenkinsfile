@@ -32,9 +32,6 @@ pipeline {
         }
 
         stage('Build Image') {
-            agent {
-                docker { image 'docker:latest' } // Cambia aquí a una imagen que tenga Docker
-            }
             steps {
                 copyArtifacts filter: 'target/*.jar',
                             fingerprintArtifacts: true,
@@ -42,6 +39,7 @@ pipeline {
                             flatten: true,
                             selector: specific('${BUILD_NUMBER}'),
                             target: 'target/'
+                sh 'which docker' 
                 sh 'docker --version'
                 sh 'docker-compose --version'
                 sh 'docker-compose build'
